@@ -7,10 +7,7 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
 import net.corda.finance.*
 import net.corda.flows.CashIssueFlow
-import net.corda.node.services.network.NetworkMapService
 import net.corda.node.services.transactions.ValidatingNotaryService
-import net.corda.testing.DUMMY_NOTARY
-import net.corda.testing.DUMMY_NOTARY_KEY
 import net.corda.testing.node.MockNetwork
 import org.junit.After
 import org.junit.Before
@@ -27,12 +24,10 @@ class FxTransactionBuildTutorialTest {
     fun setup() {
         mockNet = MockNetwork(threadPerNode = true)
         val notaryService = ServiceInfo(ValidatingNotaryService.type)
-        notaryNode = mockNet.createNode(
-                legalName = DUMMY_NOTARY.name,
-                overrideServices = mapOf(notaryService to DUMMY_NOTARY_KEY),
-                advertisedServices = *arrayOf(ServiceInfo(NetworkMapService.type), notaryService))
-        nodeA = mockNet.createPartyNode(notaryNode.network.myAddress)
-        nodeB = mockNet.createPartyNode(notaryNode.network.myAddress)
+        val basketOfNodes = mockNet.createSomeNodes(2)
+        notaryNode = basketOfNodes.notaryNode
+        nodeA = basketOfNodes.partyNodes[0]
+        nodeB = basketOfNodes.partyNodes[1]
         nodeB.registerInitiatedFlow(ForeignExchangeRemoteFlow::class.java)
     }
 
@@ -64,7 +59,7 @@ class FxTransactionBuildTutorialTest {
         val nodeBVaultUpdate = nodeB.services.vaultService.updates.toFuture()
 
         // Now run the actual Fx exchange
-        val doIt = nodeA.services.startFlow(ForeignExchangeFlow("trade1",
+        val doIt = nodeA.services.startFlow(ForeignExchangeFlow.buildBuyer("trade1",
                 POUNDS(100).issuedBy(nodeB.info.legalIdentity.ref(0x01)),
                 DOLLARS(200).issuedBy(nodeA.info.legalIdentity.ref(0x01)),
                 nodeA.info.legalIdentity,

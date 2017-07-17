@@ -21,8 +21,7 @@ class BankOfCordaWebApi(val rpc: CordaRPCOps) {
     data class IssueRequestParams(val amount: Long, val currency: String,
                                   val issueToPartyName: X500Name, val issuerBankPartyRef: String,
                                   val issuerBankName: X500Name,
-                                  val notaryName: X500Name,
-                                  val anonymous: Boolean)
+                                  val notaryName: X500Name)
 
     private companion object {
         val logger = loggerFor<BankOfCordaWebApi>()
@@ -59,7 +58,7 @@ class BankOfCordaWebApi(val rpc: CordaRPCOps) {
         // The line below blocks and waits for the future to resolve.
         return try {
             rpc.startFlow(::CashIssueFlow, amount, issuerBankPartyRef, notaryNode.notaryIdentity).returnValue.getOrThrow()
-            rpc.startFlow(::CashPaymentFlow, amount, issueToParty, params.anonymous)
+            rpc.startFlow(::CashPaymentFlow, amount, issueToParty)
                     .returnValue.getOrThrow().stx
             logger.info("Issue request completed successfully: $params")
             Response.status(Response.Status.CREATED).build()
