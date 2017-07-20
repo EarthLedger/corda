@@ -48,7 +48,7 @@ class TraderDemoClientApi(val rpc: CordaRPCOps) {
         val buyer = rpc.partyFromX500Name(buyerName) ?: throw IllegalStateException("Don't know $buyerName")
         val seller = rpc.partyFromX500Name(sellerName) ?: throw IllegalStateException("Don't know $sellerName")
         val notaryLegalIdentity = rpc.partyFromX500Name(DUMMY_NOTARY.name)
-                ?: throw IllegalStateException("Unable to locate ${DUMMY_NOTARY.name} in Network Map Service")
+                ?: throw IllegalStateException("Unable to locate ${DUMMY_NOTARY.name} in identity service")
         val notaryNode = rpc.nodeIdentityFromParty(notaryLegalIdentity)
                 ?: throw IllegalStateException("Unable to locate notary node in network map cache")
         val amounts = calculateRandomlySizedAmounts(amount, 3, 10, Random())
