@@ -152,6 +152,7 @@ object TwoPartyDealFlow {
             val handshake = receive<Handshake<U>>(otherParty)
 
             progressTracker.currentStep = VERIFYING
+            val otherPartyAndCert = serviceHub.identityService.certificateFromParty(otherParty) ?: throw IllegalArgumentException("Missing X.509 certificate for well known identity ${otherParty}")
             return handshake.unwrap {
                 // Verify the transaction identities represent the correct parties
                 val wellKnownOtherParty = serviceHub.identityService.partyFromAnonymous(it.primaryIdentity)
