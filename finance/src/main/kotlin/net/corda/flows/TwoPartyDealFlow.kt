@@ -5,12 +5,10 @@ import net.corda.contracts.DealState
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
-import net.corda.core.crypto.subject
 import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
-import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.node.NodeInfo
 import net.corda.core.node.services.ServiceType
 import net.corda.core.serialization.CordaSerializable
@@ -21,7 +19,6 @@ import net.corda.core.utilities.seconds
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
 import java.security.PublicKey
-import java.security.cert.X509Certificate
 
 /**
  * Classes for manipulating a two party deal or agreement.

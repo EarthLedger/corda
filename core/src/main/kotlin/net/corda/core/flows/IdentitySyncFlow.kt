@@ -4,8 +4,8 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
-import net.corda.core.identity.AnonymousPartyAndPath
 import net.corda.core.identity.Party
+import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.unwrap
@@ -37,8 +37,8 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
         val states: List<ContractState> = (tx.inputs.map { serviceHub.loadState(it) }.requireNoNulls().map { it.data } + tx.outputs.map { it.data })
         val participants: List<AbstractParty> = states.flatMap { it.participants }
         val confidentialIdentities: List<AnonymousParty> = participants.filterIsInstance<AnonymousParty>()
-        val identities: Map<AnonymousParty, AnonymousPartyAndPath> = confidentialIdentities
-                .map { Pair(it, serviceHub.identityService.anonymousFromKey(it.owningKey)!!) }
+        val identities: Map<AnonymousParty, PartyAndCertificate> = confidentialIdentities
+                .map { Pair(it, serviceHub.identityService.certificateFromKey(it.owningKey)!!) }
                 .toMap()
 
         progressTracker.currentStep = SYNCING_IDENTITIES
@@ -47,7 +47,7 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
                 require(req.all { it in identities }) { "${otherSide} requested a confidential identity not part of transaction ${tx.id}" }
                 req
             }
-            val sendIdentities: List<AnonymousPartyAndPath> = requestedIdentities.map(identities::get).requireNoNulls()
+            val sendIdentities: List<PartyAndCertificate> = requestedIdentities.map(identities::get).requireNoNulls()
             send(otherSide, sendIdentities)
         }
 

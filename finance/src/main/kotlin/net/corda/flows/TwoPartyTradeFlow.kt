@@ -5,8 +5,9 @@ import net.corda.contracts.asset.Cash
 import net.corda.contracts.asset.sumCashBy
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
-import net.corda.core.identity.AnonymousPartyAndPath
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
+import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.node.NodeInfo
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
@@ -55,14 +56,14 @@ object TwoPartyTradeFlow {
     data class SellerTradeInfo(
             val assetForSale: StateAndRef<OwnableState>,
             val price: Amount<Currency>,
-            val payToIdentity: AnonymousPartyAndPath
+            val payToIdentity: PartyAndCertificate
     )
 
     open class Seller(val otherParty: Party,
                       val notaryNode: NodeInfo,
                       val assetToSell: StateAndRef<OwnableState>,
                       val price: Amount<Currency>,
-                      val me: AnonymousPartyAndPath,
+                      val me: PartyAndCertificate,
                       override val progressTracker: ProgressTracker = Seller.tracker()) : FlowLogic<SignedTransaction>() {
 
         companion object {
@@ -192,7 +193,8 @@ object TwoPartyTradeFlow {
 
                 // Register the identity we're about to send payment to. This shouldn't be the same as the asset owner
                 // identity, so that anonymity is enforced.
-                serviceHub.identityService.verifyAndRegisterAnonymousIdentity(it.payToIdentity, otherParty)
+                val wellKnownPayToIdentity = serviceHub.identityService.verifyAndRegisterIdentity(it.payToIdentity)
+                require(wellKnownPayToIdentity?.party == otherParty) { "Well known identity to pay to must match counterparty identity" }
 
                 if (it.price > acceptablePrice)
                     throw UnacceptablePriceException(it.price)
@@ -204,7 +206,7 @@ object TwoPartyTradeFlow {
         }
 
         @Suspendable
-        private fun assembleSharedTX(assetForSale: StateAndRef<OwnableState>, tradeRequest: SellerTradeInfo, buyerAnonymousIdentity: AnonymousPartyAndPath): SharedTx {
+        private fun assembleSharedTX(assetForSale: StateAndRef<OwnableState>, tradeRequest: SellerTradeInfo, buyerAnonymousIdentity: PartyAndCertificate): SharedTx {
             val ptx = TransactionBuilder(notary)
 
             // Add input and output states for the movement of cash, by using the Cash contract to generate the states
@@ -224,14 +226,14 @@ object TwoPartyTradeFlow {
 
             // TODO: Should have helper functions to do this automatically for us rather than manually
             val identities = listOf(
-                    Pair(serviceHub.myInfo.legalIdentity, buyerAnonymousIdentity),
-                    Pair(otherParty, tradeRequest.payToIdentity)
+                    Pair(serviceHub.myInfo.legalIdentity, buyerAnonymousIdentity.party.anonymise()),
+                    Pair(otherParty, tradeRequest.payToIdentity.party.anonymise())
             ).toMap()
 
             return SharedTx(tx, identities, cashSigningPubKeys)
         }
         // DOCEND 1
 
-        data class SharedTx(val tx: TransactionBuilder, val identities: Map<Party, AnonymousPartyAndPath>, val cashSigningPubKeys: List<PublicKey>)
+        data class SharedTx(val tx: TransactionBuilder, val identities: Map<Party, AnonymousParty>, val cashSigningPubKeys: List<PublicKey>)
     }
 }
