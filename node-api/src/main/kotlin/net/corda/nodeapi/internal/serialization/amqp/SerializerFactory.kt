@@ -270,7 +270,7 @@ class SerializerFactory(val whitelist: ClassWhitelist = AllWhitelist) {
 
     private fun makeMapSerializer(declaredType: ParameterizedType): AMQPSerializer<Any> {
         val rawType = declaredType.rawType as Class<*>
-        rawType.checkNotUnorderedHashMap()
+        rawType.checkNotUnsupportedHashMap()
         return MapSerializer(declaredType, this)
     }
 
