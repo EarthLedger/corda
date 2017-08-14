@@ -46,7 +46,7 @@ fun main(args: Array<String>) {
 
     val baseDirectory = Paths.get("build/rpc-api-tutorial")
     val user = User("user", "password", permissions = setOf(startFlowPermission<CashIssueFlow>(),
-            startFlowPermission<CashPaymentFlow>(),
+            startFlowPermission<CashPaymentFlow.Initiate>(),
             startFlowPermission<CashExitFlow>()))
 
     driver(driverDirectory = baseDirectory) {
@@ -125,7 +125,7 @@ fun generateTransactions(proxy: CordaRPCOps) {
             ownedQuantity -= quantity
         } else if (ownedQuantity > 1000 && n < 0.7) {
             val quantity = Math.abs(random.nextLong() % Math.min(ownedQuantity, 2000))
-            proxy.startFlow(::CashPaymentFlow, Amount(quantity, USD), me)
+            proxy.startFlow(CashPaymentFlow::Initiate, Amount(quantity, USD), me)
         } else {
             val quantity = Math.abs(random.nextLong() % 1000)
             proxy.startFlow(::CashIssueFlow, Amount(quantity, USD), issueRef, notary)

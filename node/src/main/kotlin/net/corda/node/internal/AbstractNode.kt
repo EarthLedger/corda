@@ -209,6 +209,9 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
                 findRPCFlows(scanResult)
             }
 
+            // TODO Remove this once the cash stuff is in its own CorDapp
+            registerInitiatedFlow(CashPaymentFlow.Receive::class.java)
+
             runOnStop += network::stop
             _networkMapRegistrationFuture.captureLater(registerWithNetworkMapIfConfigured())
             smm.start()
@@ -384,7 +387,7 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
                             // TODO Remove all Cash flows from default list once they are split into separate CorDapp.
                             CashIssueFlow::class.java,
                             CashExitFlow::class.java,
-                            CashPaymentFlow::class.java)
+                            CashPaymentFlow.Initiate::class.java)
     }
 
     /**

@@ -56,7 +56,7 @@ class TraderDemoClientApi(val rpc: CordaRPCOps) {
         rpc.startFlow(::CashIssueFlow, amount, OpaqueBytes.of(1), notaryNode.notaryIdentity).returnValue.getOrThrow()
         // pay random amounts of currency up to the requested amount, in parallel
         val resultFutures = amounts.map { pennies ->
-            rpc.startFlow(::CashPaymentFlow, amount.copy(quantity = pennies), buyer, anonymous).returnValue
+            rpc.startFlow(CashPaymentFlow::Initiate, amount.copy(quantity = pennies), buyer, anonymous).returnValue
         }
 
         resultFutures.transpose().getOrThrow()

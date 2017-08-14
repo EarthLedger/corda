@@ -67,7 +67,7 @@ class CordaRPCOpsImplTest {
         rpc = CordaRPCOpsImpl(aliceNode.services, aliceNode.smm, aliceNode.database)
         CURRENT_RPC_CONTEXT.set(RpcContext(User("user", "pwd", permissions = setOf(
                 startFlowPermission<CashIssueFlow>(),
-                startFlowPermission<CashPaymentFlow>()
+                startFlowPermission<CashPaymentFlow.Initiate>()
         ))))
 
         aliceNode.database.transaction {
@@ -138,7 +138,7 @@ class CordaRPCOpsImplTest {
 
         mockNet.runNetwork()
 
-        rpc.startFlow(::CashPaymentFlow, 100.DOLLARS, aliceNode.info.legalIdentity, anonymous)
+        rpc.startFlow(CashPaymentFlow::Initiate, 100.DOLLARS, aliceNode.info.legalIdentity, anonymous)
 
         mockNet.runNetwork()
 
