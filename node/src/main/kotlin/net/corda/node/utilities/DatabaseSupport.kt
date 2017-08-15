@@ -5,7 +5,10 @@ import net.corda.core.crypto.parsePublicKeyBase58
 import net.corda.core.crypto.toBase58String
 import org.bouncycastle.cert.X509CertificateHolder
 import org.h2.jdbc.JdbcBlob
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.DateColumnType
+import org.jetbrains.exposed.sql.Table
 import java.io.ByteArrayInputStream
 import java.security.PublicKey
 import java.security.cert.CertPath
@@ -23,8 +26,7 @@ const val NODE_DATABASE_PREFIX = "node_"
 
 // Composite columns for use with below Exposed helpers.
 data class PartyColumns(val name: Column<String>, val owningKey: Column<PublicKey>)
-data class PartyAndCertificateColumns(val name: Column<String>, val owningKey: Column<PublicKey>,
-                                      val certificate: Column<X509CertificateHolder>, val certPath: Column<CertPath>)
+data class PartyAndCertificateColumns(val certPath: Column<CertPath>)
 data class StateRefColumns(val txId: Column<SecureHash>, val index: Column<Int>)
 data class TxnNoteColumns(val txId: Column<SecureHash>, val note: Column<String>)
 
@@ -35,19 +37,22 @@ fun Table.certificate(name: String) = this.registerColumn<X509CertificateHolder>
 fun Table.certificatePath(name: String) = this.registerColumn<CertPath>(name, CertPathColumnType)
 fun Table.publicKey(name: String) = this.registerColumn<PublicKey>(name, PublicKeyColumnType)
 fun Table.secureHash(name: String) = this.registerColumn<SecureHash>(name, SecureHashColumnType)
-fun Table.party(nameColumnName: String,
-                keyColumnName: String) = PartyColumns(this.varchar(nameColumnName, length = 255), this.publicKey(keyColumnName))
-fun Table.partyAndCertificate(nameColumnName: String,
-                              keyColumnName: String,
-                              certificateColumnName: String,
-                              pathColumnName: String) = PartyAndCertificateColumns(this.varchar(nameColumnName, length = 255), this.publicKey(keyColumnName),
-        this.certificate(certificateColumnName), this.certificatePath(pathColumnName))
+fun Table.party(nameColumnName: String, keyColumnName: String): PartyColumns {
+    return PartyColumns(this.varchar(nameColumnName, length = 255), this.publicKey(keyColumnName))
+}
+fun Table.partyAndCertificate(pathColumnName: String): PartyAndCertificateColumns {
+    return PartyAndCertificateColumns(this.certificatePath(pathColumnName))
+}
 fun Table.uuidString(name: String) = this.registerColumn<UUID>(name, UUIDStringColumnType)
 fun Table.localDate(name: String) = this.registerColumn<LocalDate>(name, LocalDateColumnType)
 fun Table.localDateTime(name: String) = this.registerColumn<LocalDateTime>(name, LocalDateTimeColumnType)
 fun Table.instant(name: String) = this.registerColumn<Instant>(name, InstantColumnType)
-fun Table.stateRef(txIdColumnName: String, indexColumnName: String) = StateRefColumns(this.secureHash(txIdColumnName), this.integer(indexColumnName))
-fun Table.txnNote(txIdColumnName: String, txnNoteColumnName: String) = TxnNoteColumns(this.secureHash(txIdColumnName), this.text(txnNoteColumnName))
+fun Table.stateRef(txIdColumnName: String, indexColumnName: String): StateRefColumns {
+    return StateRefColumns(this.secureHash(txIdColumnName), this.integer(indexColumnName))
+}
+fun Table.txnNote(txIdColumnName: String, txnNoteColumnName: String): TxnNoteColumns {
+    return TxnNoteColumns(this.secureHash(txIdColumnName), this.text(txnNoteColumnName))
+}
 
 /**
  * [ColumnType] for marshalling to/from database on behalf of [X509CertificateHolder].
