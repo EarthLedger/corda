@@ -227,9 +227,14 @@ abstract class SignTransactionFlow(val otherParty: Party,
     }
 
     @Suspendable private fun checkSignatures(stx: SignedTransaction) {
-        val signingIdentities = stx.sigs.map { serviceHub.identityService.partyFromKey(it.by) }.filterNotNull()
-        require(otherParty in signingIdentities) {
-            "The Initiator of CollectSignaturesFlow must have signed the transaction. Found ${signingIdentities}"
+        val signingIdentities = stx.sigs
+                .map { serviceHub.identityService.partyFromKey(it.by) }
+                .filterNotNull()
+        val signingWellKnownIdentities = signingIdentities
+                .map { serviceHub.identityService.partyFromAnonymous(it) }
+                .filterNotNull()
+        require(otherParty in signingWellKnownIdentities) {
+            "The Initiator of CollectSignaturesFlow must have signed the transaction. Found ${signingWellKnownIdentities}, expected ${otherParty}"
         }
         val signed = stx.sigs.map { it.by }
         val allSigners = stx.tx.requiredSigningKeys

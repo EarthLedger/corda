@@ -5,7 +5,9 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.UpgradeCommand
 import net.corda.core.contracts.UpgradedContract
 import net.corda.core.contracts.requireThat
+import net.corda.core.crypto.toStringShort
 import net.corda.core.flows.*
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.identity.Party
@@ -86,8 +88,8 @@ class IdentitySyncHandler(val otherSide: Party) : FlowLogic<Unit>() {
     @Suspendable
     override fun call(): Unit {
         progressTracker.currentStep = RECEIVING_IDENTITIES
-        val allIdentities = receive<List<AnonymousParty>>(otherSide).unwrap { it }
-        val unknownIdentities = allIdentities.filter { serviceHub.identityService.partyFromKey(it.owningKey) == null }
+        val allIdentities = receive<List<AbstractParty>>(otherSide).unwrap { it }
+        val unknownIdentities = allIdentities.filter { serviceHub.identityService.partyFromAnonymous(it) == null }
         val missingIdentities: List<PartyAndCertificate> = sendAndReceive<List<PartyAndCertificate>>(otherSide, unknownIdentities).unwrap { it }
         missingIdentities.forEach { identity ->
             serviceHub.identityService.verifyAndRegisterIdentity(identity)

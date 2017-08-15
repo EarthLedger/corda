@@ -2,8 +2,8 @@ package net.corda.core.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.ContractState
+import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.transactions.WireTransaction
@@ -35,19 +35,23 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
     override fun call() {
         progressTracker.currentStep = EXTRACTING_CONFIDENTIAL_IDENTITIES
         val states: List<ContractState> = (tx.inputs.map { serviceHub.loadState(it) }.requireNoNulls().map { it.data } + tx.outputs.map { it.data })
-        val participants: List<AbstractParty> = states.flatMap { it.participants }
-        val confidentialIdentities: List<AnonymousParty> = participants.filterIsInstance<AnonymousParty>()
-        val identities: Map<AnonymousParty, PartyAndCertificate> = confidentialIdentities
+        val identities: List<AbstractParty> = states
+                .flatMap { it.participants }
+        val confidentialIdentities = identities
+                .filter { serviceHub.networkMapCache.getNodeByLegalIdentityKey(it.owningKey) == null }
+                .toSet()
+                .toList()
+        val identityCertificates: Map<AbstractParty, PartyAndCertificate> = identities
                 .map { Pair(it, serviceHub.identityService.certificateFromKey(it.owningKey)!!) }
                 .toMap()
 
         progressTracker.currentStep = SYNCING_IDENTITIES
         otherSides.forEach { otherSide ->
-            val requestedIdentities: List<AnonymousParty> = sendAndReceive<List<AnonymousParty>>(otherSide, confidentialIdentities).unwrap { req ->
+            val requestedIdentities: List<AbstractParty> = sendAndReceive<List<AbstractParty>>(otherSide, confidentialIdentities).unwrap { req ->
                 require(req.all { it in identities }) { "${otherSide} requested a confidential identity not part of transaction ${tx.id}" }
                 req
             }
-            val sendIdentities: List<PartyAndCertificate> = requestedIdentities.map(identities::get).requireNoNulls()
+            val sendIdentities: List<PartyAndCertificate> = requestedIdentities.map(identityCertificates::get).requireNoNulls()
             send(otherSide, sendIdentities)
         }
 

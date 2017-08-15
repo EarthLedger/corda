@@ -337,7 +337,7 @@ class TwoPartyTradeFlowTests {
 
         val allNodes = listOf(notaryNode, aliceNode, bobNode, bankNode)
         allNodes.forEach { node ->
-            allNodes.map { it.services.myInfo.legalIdentityAndCert }.forEach { identity -> node.services.identityService.registerIdentity(identity) }
+            allNodes.map { it.services.myInfo.legalIdentityAndCert }.forEach { identity -> node.services.identityService.verifyAndRegisterIdentity(identity) }
         }
 
         ledger(aliceNode.services, initialiseSerialization = false) {
