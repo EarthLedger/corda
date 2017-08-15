@@ -144,7 +144,7 @@ class ForeignExchangeFlow(val tradeId: String,
         }
 
         // having collated the data create the full transaction.
-        val signedTransaction = buildTradeProposal(outInputStates, ourOutputStates, theirInputStates, theirOutputStates)
+        val signedTransaction = buildTradeProposal(ourInputStates, ourOutputStates, theirInputStates, theirOutputStates)
 
         // pass transaction details to the counterparty to revalidate and confirm with a signature
         // Allow otherParty to access our data to resolve the transaction.

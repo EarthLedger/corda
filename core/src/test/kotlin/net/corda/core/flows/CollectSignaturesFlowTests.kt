@@ -3,14 +3,14 @@ package net.corda.core.flows
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.requireThat
-import net.corda.testing.contracts.DummyContract
-import net.corda.core.identity.AnonymousPartyAndPath
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.utilities.getOrThrow
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.unwrap
 import net.corda.testing.MINI_CORP_KEY
+import net.corda.testing.contracts.DummyContract
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockServices
 import org.junit.After
@@ -24,7 +24,7 @@ class CollectSignaturesFlowTests {
     lateinit var a: MockNetwork.MockNode
     lateinit var b: MockNetwork.MockNode
     lateinit var c: MockNetwork.MockNode
-    lateinit var identities: Map<Party, AnonymousPartyAndPath>
+    lateinit var identities: Map<Party, AnonymousParty>
     lateinit var notary: Party
     val services = MockServices()
 
@@ -38,7 +38,7 @@ class CollectSignaturesFlowTests {
         notary = nodes.notaryNode.info.notaryIdentity
         identities = listOf(a, b, c)
                 .map { node ->
-                    Pair(node.info.legalIdentity, node.services.keyManagementService.freshKeyAndCert(node.info.legalIdentityAndCert, revocationEnabled = false))
+                    Pair(node.info.legalIdentity, node.services.keyManagementService.freshKeyAndCert(node.info.legalIdentityAndCert, revocationEnabled = false).party.anonymise())
                 }.toMap()
         mockNet.runNetwork()
     }
@@ -83,7 +83,7 @@ class CollectSignaturesFlowTests {
         }
 
         @InitiatedBy(TestFlow.Initiator::class)
-        class Responder(val otherParty: Party, val identities: Map<Party, AnonymousPartyAndPath>) : FlowLogic<SignedTransaction>() {
+        class Responder(val otherParty: Party, val identities: Map<Party, AnonymousParty>) : FlowLogic<SignedTransaction>() {
             @Suspendable
             override fun call(): SignedTransaction {
                 val state = receive<DummyContract.MultiOwnerState>(otherParty).unwrap { it }
@@ -106,7 +106,7 @@ class CollectSignaturesFlowTests {
     // receiving off the wire.
     object TestFlowTwo {
         @InitiatingFlow
-        class Initiator(val state: DummyContract.MultiOwnerState, val identities: Map<Party, AnonymousPartyAndPath>) : FlowLogic<SignedTransaction>() {
+        class Initiator(val state: DummyContract.MultiOwnerState, val identities: Map<Party, AnonymousParty>) : FlowLogic<SignedTransaction>() {
             @Suspendable
             override fun call(): SignedTransaction {
                 val notary = serviceHub.networkMapCache.notaryNodes.single().notaryIdentity
