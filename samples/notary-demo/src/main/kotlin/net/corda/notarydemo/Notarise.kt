@@ -4,6 +4,7 @@ import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.notUsed
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.crypto.toStringShort
+import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.startFlow
 import net.corda.core.node.NodeInfo

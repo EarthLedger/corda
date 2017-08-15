@@ -95,7 +95,7 @@ class TwoPartyTradeFlowTests {
             val aliceNode = basketOfNodes.partyNodes[0]
             val bobNode = basketOfNodes.partyNodes[1]
             val bankNode = basketOfNodes.partyNodes[2]
-            val cashIssuer = bankNode.info.legalIdentity.ref(1)
+            val cashIssuer = bankNode.services.legalIdentity.party.ref(1)
             val cpIssuer = bankNode.services.legalIdentity.party.ref(1, 2, 3)
 
             aliceNode.disableDBCloseOnStop()
@@ -143,7 +143,7 @@ class TwoPartyTradeFlowTests {
             val aliceNode = mockNet.createPartyNode(notaryNode.network.myAddress, ALICE.name)
             val bobNode = mockNet.createPartyNode(notaryNode.network.myAddress, BOB.name)
             val bankNode = mockNet.createPartyNode(notaryNode.network.myAddress, BOC.name)
-            val cashIssuer = bankNode.info.legalIdentity.ref(1)
+            val cashIssuer = bankNode.services.legalIdentity.party.ref(1)
             val cpIssuer = bankNode.services.legalIdentity.party.ref(1, 2, 3)
 
             aliceNode.disableDBCloseOnStop()
@@ -197,7 +197,7 @@ class TwoPartyTradeFlowTests {
             val aliceNode = mockNet.createPartyNode(notaryNode.network.myAddress, ALICE.name)
             var bobNode = mockNet.createPartyNode(notaryNode.network.myAddress, BOB.name)
             val bankNode = mockNet.createPartyNode(notaryNode.network.myAddress, BOC.name)
-            val cashIssuer = bankNode.info.legalIdentity.ref(1)
+            val cashIssuer = bankNode.services.legalIdentity.party.ref(1)
             val cpIssuer = bankNode.services.legalIdentity.party.ref(1, 2, 3)
 
             aliceNode.services.identityService.verifyAndRegisterIdentity(bobNode.services.legalIdentity)
@@ -612,7 +612,7 @@ class TwoPartyTradeFlowTests {
             sigs.add(node.services.keyManagementService.sign(SignableData(id, SignatureMetadata(1, Crypto.findSignatureScheme(node.services.legalIdentityKey).schemeNumberID)), node.services.legalIdentityKey))
             sigs.add(notaryNode.services.keyManagementService.sign(SignableData(id, SignatureMetadata(1, Crypto.findSignatureScheme(notaryNode.services.notaryIdentityKey).schemeNumberID)), notaryNode.services.notaryIdentityKey))
             extraSigningNodes.forEach { currentNode ->
-                sigs.add(currentNode.services.keyManagementService.sign(SignableData(id, SignatureMetadata(1, Crypto.findSignatureScheme(currentNode.info.legalIdentity.owningKey).schemeNumberID)), currentNode.services.legalIdentityKey))
+                sigs.add(currentNode.services.keyManagementService.sign(SignableData(id, SignatureMetadata(1, Crypto.findSignatureScheme(currentNode.services.legalIdentity.owningKey).schemeNumberID)), currentNode.services.legalIdentityKey))
             }
             SignedTransaction(it, sigs)
         }

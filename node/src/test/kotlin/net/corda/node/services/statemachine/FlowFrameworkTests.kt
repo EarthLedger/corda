@@ -393,7 +393,7 @@ class FlowFrameworkTests {
         val sessionEndReceived = Semaphore(0)
         receivedSessionMessagesObservable().filter { it.message is SessionEnd }.subscribe { sessionEndReceived.release() }
         val resultFuture = node1.services.startFlow(
-                WaitForOtherSideEndBeforeSendAndReceive(node2.info.legalIdentity, sessionEndReceived)).resultFuture
+                WaitForOtherSideEndBeforeSendAndReceive(node2.services.legalIdentity.party, sessionEndReceived)).resultFuture
         mockNet.runNetwork()
         assertThatExceptionOfType(UnexpectedFlowEndException::class.java).isThrownBy {
             resultFuture.getOrThrow()
@@ -673,7 +673,7 @@ class FlowFrameworkTests {
                 node1 sent sessionInit(SendFlow::class, flowVersion = 1, payload = "Old initiating") to node2,
                 node2 sent sessionConfirm(flowVersion = 2) to node1
         )
-        assertThat(initiatingFlow.getFlowContext(node2.info.legalIdentity).flowVersion).isEqualTo(2)
+        assertThat(initiatingFlow.getFlowContext(node2.services.legalIdentity.party).flowVersion).isEqualTo(2)
     }
 
     @Test

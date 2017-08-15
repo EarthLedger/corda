@@ -5,6 +5,7 @@ import com.jcraft.jsch.Session
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.CordaRPCConnection
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.fork
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.NodeInfo

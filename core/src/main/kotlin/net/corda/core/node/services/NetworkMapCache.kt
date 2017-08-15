@@ -7,6 +7,7 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.randomOrNull
 import net.corda.core.messaging.DataFeed
 import net.corda.core.node.NodeInfo
+import net.corda.core.node.ServiceEntry
 import net.corda.core.serialization.CordaSerializable
 import org.bouncycastle.asn1.x500.X500Name
 import rx.Observable

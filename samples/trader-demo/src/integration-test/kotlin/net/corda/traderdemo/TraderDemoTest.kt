@@ -10,7 +10,6 @@ import net.corda.flows.CashIssueFlow
 import net.corda.testing.DUMMY_BANK_A
 import net.corda.testing.DUMMY_BANK_B
 import net.corda.testing.DUMMY_NOTARY
-import net.corda.flows.IssuerFlow
 import net.corda.node.services.startFlowPermission
 import net.corda.node.services.transactions.SimpleNotaryService
 import net.corda.nodeapi.User
@@ -57,7 +56,7 @@ class TraderDemoTest : NodeBasedTest() {
         val expectedPaper = listOf(clientA.commercialPaperCount + 1, clientB.commercialPaperCount)
 
         // TODO: Enable anonymisation
-        clientBank.runIssuer(amount = 100.DOLLARS, buyerName = nodeA.info.legalIdentity.name, sellerName = nodeB.info.legalIdentity.name, notaryName = notaryNode.info.legalIdentity.name)
+        clientBank.runIssuer(amount = 100.DOLLARS, buyerName = nodeA.services.legalIdentity.name, sellerName = nodeB.services.legalIdentity.name, notaryName = notaryNode.services.legalIdentity.name)
         clientB.runSeller(buyerName = nodeA.services.legalIdentity.name, amount = 5.DOLLARS)
 
         assertThat(clientA.cashCount).isGreaterThan(originalACash)

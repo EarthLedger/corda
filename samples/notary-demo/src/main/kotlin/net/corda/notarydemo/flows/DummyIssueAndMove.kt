@@ -26,9 +26,9 @@ class DummyIssueAndMove(private val notary: Party, private val counterpartyNode:
     @Suspendable
     override fun call() = serviceHub.run {
         // Self issue an asset
-        val amount = Amount(1000000, Issued(legalIdentity.ref(0), GBP))
+        val amount = Amount(1000000, Issued(legalIdentity.party.ref(0), GBP))
         val issueTxBuilder = TransactionBuilder(notary = notary)
-        val signers = Cash().generateIssue(issueTxBuilder, amount, serviceHub.legalIdentity, notary)
+        val signers = Cash().generateIssue(issueTxBuilder, amount, serviceHub.legalIdentity.party, notary)
         val issueTx = serviceHub.signInitialTransaction(issueTxBuilder, signers)
         serviceHub.recordTransactions(issueTx)
         // Move ownership of the asset to the counterparty
