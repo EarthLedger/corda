@@ -15,6 +15,7 @@ import net.corda.core.node.services.vault.*;
 import net.corda.core.node.services.vault.QueryCriteria.LinearStateQueryCriteria;
 import net.corda.core.node.services.vault.QueryCriteria.VaultCustomQueryCriteria;
 import net.corda.core.node.services.vault.QueryCriteria.VaultQueryCriteria;
+import net.corda.core.schemas.MappedSchema;
 import net.corda.core.utilities.OpaqueBytes;
 import net.corda.node.utilities.CordaPersistence;
 import net.corda.schemas.CashSchemaV1;
@@ -58,7 +59,9 @@ public class VaultQueryJavaTests extends TestDependencyInjectionBase {
         ArrayList<KeyPair> keys = new ArrayList<>();
         keys.add(getMEGA_CORP_KEY());
         keys.add(getDUMMY_NOTARY_KEY());
-        Pair<CordaPersistence, MockServices> databaseAndServices = makeTestDatabaseAndMockServices(Collections.EMPTY_SET, keys);
+        Set<MappedSchema> requiredSchemas = new HashSet<>();
+        requiredSchemas.add(CashSchemaV1.INSTANCE);
+        Pair<CordaPersistence, MockServices> databaseAndServices = makeTestDatabaseAndMockServices(requiredSchemas, keys);
         issuerServices = new MockServices(getDUMMY_CASH_ISSUER_KEY(), getBOC_KEY());
         database = databaseAndServices.getFirst();
         services = databaseAndServices.getSecond();

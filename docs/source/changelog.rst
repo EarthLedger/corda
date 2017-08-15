@@ -40,6 +40,11 @@ UNRELEASED
   If you specifically need well known identities, use the network map, which is the authoritative source of current well
   known identities.
 
+* ``:finance`` module now acting as a CorDapp with regard to flow registration, schemas and serializable types.
+
+* ``WebServerPluginRegistry`` now has a ``customizeJSONSerialization`` which can be overridden to extend the REST JSON
+  serializers. In particular the IRS demos must now register the ``BusinessCalendar`` serializers.
+
 Milestone 14
 ------------
 

@@ -2,7 +2,6 @@ package net.corda.flows
 
 import net.corda.contracts.asset.Cash
 import net.corda.core.concurrent.CordaFuture
-import net.corda.testing.contracts.calculateRandomlySizedAmounts
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.DOLLARS
 import net.corda.core.contracts.currency
@@ -11,10 +10,11 @@ import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.trackBy
 import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
 import net.corda.flows.IssuerFlow.IssuanceRequester
+import net.corda.testing.contracts.calculateRandomlySizedAmounts
 import net.corda.testing.expect
 import net.corda.testing.expectEvents
 import net.corda.testing.node.MockNetwork
@@ -50,6 +50,7 @@ class IssuerFlowTest(val anonymous: Boolean) {
         bankOfCordaNode = basketOfNodes.partyNodes[0]
         bankClientNode = basketOfNodes.partyNodes[1]
         notaryNode = basketOfNodes.notaryNode
+        bankOfCordaNode.registerInitiatedFlow(IssuerFlow.Issuer::class.java)
     }
 
     @After

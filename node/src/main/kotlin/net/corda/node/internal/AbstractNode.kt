@@ -26,10 +26,6 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.toNonEmptySet
-import net.corda.flows.CashExitFlow
-import net.corda.flows.CashIssueFlow
-import net.corda.flows.CashPaymentFlow
-import net.corda.flows.IssuerFlow
 import net.corda.node.services.ContractUpgradeHandler
 import net.corda.node.services.NotaryChangeHandler
 import net.corda.node.services.NotifyTransactionHandler
@@ -89,6 +85,35 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.stream.Collectors.toList
 import kotlin.collections.ArrayList
+import kotlin.collections.Iterable
+import kotlin.collections.List
+import kotlin.collections.MutableList
+import kotlin.collections.Set
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.filter
+import kotlin.collections.filterNot
+import kotlin.collections.filterNotNull
+import kotlin.collections.flatMap
+import kotlin.collections.forEach
+import kotlin.collections.groupBy
+import kotlin.collections.isNotEmpty
+import kotlin.collections.joinToString
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableSetOf
+import kotlin.collections.plus
+import kotlin.collections.plusAssign
+import kotlin.collections.reversed
+import kotlin.collections.set
+import kotlin.collections.setOf
+import kotlin.collections.singleOrNull
+import kotlin.collections.sortedWith
+import kotlin.collections.toList
+import kotlin.collections.toSet
+import kotlin.collections.toTypedArray
 import kotlin.reflect.KClass
 import net.corda.core.crypto.generateKeyPair as cryptoGenerateKeyPair
 
@@ -209,9 +234,6 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
                 registerInitiatedFlows(scanResult)
                 findRPCFlows(scanResult)
             }
-
-            // TODO Remove this once the cash stuff is in its own CorDapp
-            registerInitiatedFlow(IssuerFlow.Issuer::class.java)
 
             runOnStop += network::stop
             _networkMapRegistrationFuture.captureLater(registerWithNetworkMapIfConfigured())
@@ -384,11 +406,7 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
                 .filter { it.isUserInvokable() } +
                     // Add any core flows here
                     listOf(
-                            ContractUpgradeFlow::class.java,
-                            // TODO Remove all Cash flows from default list once they are split into separate CorDapp.
-                            CashIssueFlow::class.java,
-                            CashExitFlow::class.java,
-                            CashPaymentFlow::class.java)
+                            ContractUpgradeFlow::class.java)
     }
 
     /**

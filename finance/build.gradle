@@ -13,6 +13,10 @@ dependencies {
     compile project(':core')
     compile project(':node-schemas')
 
+    // Jackson and its plugins: parsing to/from JSON and other textual formats.
+    // Used for adding BusinessCalendar web support
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:${jackson_version}"
+
     testCompile project(':test-utils')
     testCompile project(path: ':core', configuration: 'testArtifacts')
     testCompile "junit:junit:$junit_version"
