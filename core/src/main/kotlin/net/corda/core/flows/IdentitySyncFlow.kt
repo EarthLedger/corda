@@ -34,8 +34,8 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
     override fun call() {
         progressTracker.currentStep = SYNCING_IDENTITIES
         val states: List<ContractState> = (tx.inputs.map { serviceHub.loadState(it) }.requireNoNulls().map { it.data } + tx.outputs.map { it.data })
-        val identities: List<AbstractParty> = states
-                .flatMap { it.participants }
+        val identities: List<AbstractParty> = states.flatMap { it.participants }
+        // Filter participants down to the set of those not in the network map (are not well known)
         val confidentialIdentities = identities
                 .filter { serviceHub.networkMapCache.getNodeByLegalIdentityKey(it.owningKey) == null }
                 .toSet()
@@ -46,7 +46,7 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
 
         otherSides.forEach { otherSide ->
             val requestedIdentities: List<AbstractParty> = sendAndReceive<List<AbstractParty>>(otherSide, confidentialIdentities).unwrap { req ->
-                require(req.all { it in identities }) { "${otherSide} requested a confidential identity not part of transaction ${tx.id}" }
+                require(req.all { it in identityCertificates.keys }) { "${otherSide} requested a confidential identity not part of transaction ${tx.id}" }
                 req
             }
             val sendIdentities: List<PartyAndCertificate> = requestedIdentities.map(identityCertificates::get).requireNoNulls()

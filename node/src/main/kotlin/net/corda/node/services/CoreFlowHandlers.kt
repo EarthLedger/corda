@@ -77,6 +77,10 @@ class ContractUpgradeHandler(otherSide: Party) : AbstractStateReplacementFlow.Ac
     }
 }
 
+/**
+ * Handle an offer to provide proof of identity (in the form of certificate paths) for confidential identities which
+ * we do not yet know about.
+ */
 class IdentitySyncHandler(val otherSide: Party) : FlowLogic<Unit>() {
     companion object {
         object RECEIVING_IDENTITIES : ProgressTracker.Step("Receiving confidential identities")
@@ -90,8 +94,16 @@ class IdentitySyncHandler(val otherSide: Party) : FlowLogic<Unit>() {
         progressTracker.currentStep = RECEIVING_IDENTITIES
         val allIdentities = receive<List<AbstractParty>>(otherSide).unwrap { it }
         val unknownIdentities = allIdentities.filter { serviceHub.identityService.partyFromAnonymous(it) == null }
-        val missingIdentities: List<PartyAndCertificate> = sendAndReceive<List<PartyAndCertificate>>(otherSide, unknownIdentities).unwrap { it }
-        missingIdentities.forEach { identity ->
+        progressTracker.currentStep = RECEIVING_CERTIFICATES
+        val missingIdentities = sendAndReceive<List<PartyAndCertificate>>(otherSide, unknownIdentities)
+
+        // Batch verify the identities we've received, so we know they're all correct before we start storing them in
+        // the identity service
+        missingIdentities.unwrap { identities ->
+            identities.forEach { it.verify(serviceHub.identityService.trustAnchor) }
+            identities
+        }.forEach { identity ->
+            // Store the received confidential identities in the identity service so we have a record of which well known identity they map to.
             serviceHub.identityService.verifyAndRegisterIdentity(identity)
         }
         // Send a notice over to the remote party to indicate we've synced
