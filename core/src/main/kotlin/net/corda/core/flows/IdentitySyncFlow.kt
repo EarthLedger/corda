@@ -2,7 +2,6 @@ package net.corda.core.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.ContractState
-import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
@@ -16,6 +15,7 @@ import net.corda.core.utilities.unwrap
  *
  * @return a mapping of well known identities to the confidential identities used in the transaction.
  */
+// TODO: Can this be triggered automatically from [SendTransactionFlow]
 @StartableByRPC
 @InitiatingFlow
 class IdentitySyncFlow(val otherSides: Set<Party>,
@@ -24,16 +24,15 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
     constructor(otherSide: Party, tx: WireTransaction) : this(setOf(otherSide), tx, tracker())
 
     companion object {
-        object EXTRACTING_CONFIDENTIAL_IDENTITIES : ProgressTracker.Step("Extracting confidential identities")
         object SYNCING_IDENTITIES : ProgressTracker.Step("Syncing identities")
         object AWAITING_ACKNOWLEDGMENT : ProgressTracker.Step("Awaiting acknowledgement")
 
-        fun tracker() = ProgressTracker(EXTRACTING_CONFIDENTIAL_IDENTITIES, SYNCING_IDENTITIES, AWAITING_ACKNOWLEDGMENT)
+        fun tracker() = ProgressTracker(SYNCING_IDENTITIES, AWAITING_ACKNOWLEDGMENT)
     }
 
     @Suspendable
     override fun call() {
-        progressTracker.currentStep = EXTRACTING_CONFIDENTIAL_IDENTITIES
+        progressTracker.currentStep = SYNCING_IDENTITIES
         val states: List<ContractState> = (tx.inputs.map { serviceHub.loadState(it) }.requireNoNulls().map { it.data } + tx.outputs.map { it.data })
         val identities: List<AbstractParty> = states
                 .flatMap { it.participants }
@@ -45,7 +44,6 @@ class IdentitySyncFlow(val otherSides: Set<Party>,
                 .map { Pair(it, serviceHub.identityService.certificateFromKey(it.owningKey)!!) }
                 .toMap()
 
-        progressTracker.currentStep = SYNCING_IDENTITIES
         otherSides.forEach { otherSide ->
             val requestedIdentities: List<AbstractParty> = sendAndReceive<List<AbstractParty>>(otherSide, confidentialIdentities).unwrap { req ->
                 require(req.all { it in identities }) { "${otherSide} requested a confidential identity not part of transaction ${tx.id}" }
