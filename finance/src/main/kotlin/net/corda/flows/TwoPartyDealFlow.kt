@@ -115,8 +115,7 @@ object TwoPartyDealFlow {
             // TODO: Use actual anonymised identities, not fake ones derived from the well known identity
             val myAnonymousPartyAndPath = handshake.secondaryIdentity
             val theirAnonymousPartyAndPath = handshake.primaryIdentity
-            val identities: Map<Party, AnonymousParty> = listOf(Pair(serviceHub.myInfo.legalIdentity, myAnonymousPartyAndPath), Pair(otherParty, theirAnonymousPartyAndPath)).toMap()
-            val stx = subFlow(CollectSignaturesFlow(ptx, identities, additionalSigningPubKeys))
+            val stx = subFlow(CollectSignaturesFlow(ptx, additionalSigningPubKeys))
             // DOCEND 1
 
             logger.trace { "Got signatures from other party, verifying ... " }

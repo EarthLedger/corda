@@ -5,7 +5,6 @@ import net.corda.contracts.asset.Cash
 import net.corda.contracts.asset.sumCashBy
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.node.NodeInfo
@@ -158,7 +157,7 @@ object TwoPartyTradeFlow {
 
             // Put together a proposed transaction that performs the trade, and sign it.
             progressTracker.currentStep = SIGNING
-            val (ptx, identities, cashSigningPubKeys) = assembleSharedTX(assetForSale, tradeRequest, buyerAnonymousIdentity)
+            val (ptx, cashSigningPubKeys) = assembleSharedTX(assetForSale, tradeRequest, buyerAnonymousIdentity)
 
             // Now sign the transaction with whatever keys we need to move the cash.
             val partSignedTx = serviceHub.signInitialTransaction(ptx, cashSigningPubKeys)
@@ -169,7 +168,7 @@ object TwoPartyTradeFlow {
             // Send the signed transaction to the seller, who must then sign it themselves and commit
             // it to the ledger by sending it to the notary.
             progressTracker.currentStep = COLLECTING_SIGNATURES
-            val twiceSignedTx = subFlow(CollectSignaturesFlow(partSignedTx, identities, cashSigningPubKeys, COLLECTING_SIGNATURES.childProgressTracker()))
+            val twiceSignedTx = subFlow(CollectSignaturesFlow(partSignedTx, cashSigningPubKeys, COLLECTING_SIGNATURES.childProgressTracker()))
 
             // Notarise and record the transaction.
             progressTracker.currentStep = RECORDING
@@ -224,16 +223,10 @@ object TwoPartyTradeFlow {
             val currentTime = serviceHub.clock.instant()
             tx.setTimeWindow(currentTime, 30.seconds)
 
-            // TODO: Should have helper functions to do this automatically for us rather than manually
-            val identities = listOf(
-                    Pair(serviceHub.myInfo.legalIdentity, buyerAnonymousIdentity.party.anonymise()),
-                    Pair(otherParty, tradeRequest.payToIdentity.party.anonymise())
-            ).toMap()
-
-            return SharedTx(tx, identities, cashSigningPubKeys)
+            return SharedTx(tx, cashSigningPubKeys)
         }
         // DOCEND 1
 
-        data class SharedTx(val tx: TransactionBuilder, val identities: Map<Party, AnonymousParty>, val cashSigningPubKeys: List<PublicKey>)
+        data class SharedTx(val tx: TransactionBuilder, val cashSigningPubKeys: List<PublicKey>)
     }
 }

@@ -201,8 +201,8 @@ abstract class SignTransactionFlow(val otherParty: Party,
         // Receive transaction and resolve dependencies, check sufficient signatures is disabled as we don't have all signatures.
         val stx = subFlow(ReceiveTransactionFlow(otherParty, checkSufficientSignatures = false))
         progressTracker.currentStep = VERIFYING
-        // Register the additional identities
-        additionalIdentities.forEach { serviceHub.identityService.registerIdentity(it) }
+        // Verify then store identities that are provided by the counterparty.
+        additionalIdentities.forEach { serviceHub.identityService.verifyAndRegisterIdentity(it) }
         // Check that the Responder actually needs to sign.
         checkMySignatureRequired(stx)
         // Check the signatures which have already been provided. Usually the Initiators and possibly an Oracle's.
