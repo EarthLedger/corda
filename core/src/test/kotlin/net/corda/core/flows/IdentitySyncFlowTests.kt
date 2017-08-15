@@ -1,10 +1,10 @@
 package net.corda.core.flows
 
 import net.corda.contracts.asset.Cash
-import net.corda.core.contracts.DOLLARS
 import net.corda.core.identity.Party
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
+import net.corda.finance.DOLLARS
 import net.corda.flows.CashIssueFlow
 import net.corda.testing.ALICE
 import net.corda.testing.BOB
@@ -38,10 +38,10 @@ class IdentitySyncFlowTests {
         val bobNode = mockNet.createPartyNode(notaryNode.network.myAddress, BOB.name)
         val alice: Party = aliceNode.services.myInfo.legalIdentity
         val bob: Party = bobNode.services.myInfo.legalIdentity
-        aliceNode.services.identityService.registerIdentity(bobNode.info.legalIdentityAndCert)
-        aliceNode.services.identityService.registerIdentity(notaryNode.info.legalIdentityAndCert)
-        bobNode.services.identityService.registerIdentity(aliceNode.info.legalIdentityAndCert)
-        bobNode.services.identityService.registerIdentity(notaryNode.info.legalIdentityAndCert)
+        aliceNode.services.identityService.verifyAndRegisterIdentity(bobNode.info.legalIdentityAndCert)
+        aliceNode.services.identityService.verifyAndRegisterIdentity(notaryNode.info.legalIdentityAndCert)
+        bobNode.services.identityService.verifyAndRegisterIdentity(aliceNode.info.legalIdentityAndCert)
+        bobNode.services.identityService.verifyAndRegisterIdentity(notaryNode.info.legalIdentityAndCert)
 
         // Alice issues some cash to a new confidential identity that Bob doesn't know about
         val ref = OpaqueBytes.of(0x01)
